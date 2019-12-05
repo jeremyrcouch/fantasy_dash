@@ -65,6 +65,31 @@ def rank_points():
     pass
 
 
+def close_match(points: pd.DataFrame, win: bool, points_col: str,
+                against_col: str, maxDiff: float = 10) -> pd.Series:
+    """Determine if a matchup is a close win or loss.
+    
+    Args:
+        points: DataFrame, weekly points data
+        win: bool, True for win and False for loss
+        points_col: str, points column name
+        against_col: str, vs column name
+        maxDiff: float, max difference to be considered close
+        
+    Returns:
+        Close: pd.Series, bool for if close
+    """
+    
+    points_close = points.copy()
+    points_close['CloseMatch'] = abs(points_close.loc[:, points_col] - points_close.loc[:, points_col+against_col]) <= maxDiff
+    if win:
+        points_close['Close'] = (points_close.loc[:, 'Won'].astype(int) + points_close.loc[:, 'CloseMatch'].astype(int)) == 2
+    else:
+        points_close['Close'] = (-10*points_close.loc[:, 'Won'].astype(int) + points_close.loc[:, 'CloseMatch'].astype(int)) > 0
+    
+    return pd.Series(points_close.loc[:, 'Close'])
+
+
 def expected_win(points: pd.DataFrame, id_col: str, points_col: str) -> pd.Series:
     """Determine if a win is expected given points for week.
     
@@ -79,14 +104,14 @@ def expected_win(points: pd.DataFrame, id_col: str, points_col: str) -> pd.Serie
     
     id_stats = pd.DataFrame(points.groupby(id_col)[points_col].median()).reset_index()
     id_stats = id_stats.rename(columns={points_col: 'WeeklyMedianPoints'})
-    points = pd.merge(points, id_stats, how='left', on=[id_col])
-    points['ExpectedWin'] = points.loc[:, points_col] > points.loc[:, 'WeeklyMedianPoints']
+    points_exp = pd.merge(points, id_stats, how='left', on=[id_col])
+    points_exp['ExpectedWin'] = points_exp.loc[:, points_col] > points_exp.loc[:, 'WeeklyMedianPoints']
     
-    return points.loc[:, 'ExpectedWin']
+    return pd.Series(points_exp.loc[:, 'ExpectedWin'])
 
 
 def calculate_season_stats(points: pd.DataFrame, player_col: str, points_col: str,
-                           against_col: str) -> pd.DataFrame:
+                           against_col: str, rank_col: str) -> pd.DataFrame:
     """Calculate seasonal statistics.
     
     Args:
@@ -94,62 +119,69 @@ def calculate_season_stats(points: pd.DataFrame, player_col: str, points_col: st
         player_col: str, player column name
         points_col: str, points column name
         against_col: str, vs column name
+        rank_col: str, rank string
         
     Returns:
         season: DataFrame, seasonal statistics
     """
     
-    season = points.groupby(player_col).agg({points_col: 'sum',
-                                             points_col+against_col: 'sum',
-                                             'Won': 'sum',
-                                             'RankPoints': 'sum',
-                                             'ExpectedWin': 'sum'})
-    season = season.rename(columns={'Won': 'Wins', 'ExpectedWin': 'ExpectedWins'})
-    season = season.round({points_col: 2, points_col+against_col: 2, 'RankPoints': 1})
-    season['TotalPoints'] = season.loc[:, 'Wins'] + season.loc[:, 'RankPoints']
+    temp_points = points.copy()
+    int_cols = ['Won', 'ExpectedWin', 'CloseWin', 'CloseLoss']
+    temp_points.loc[:, int_cols] = temp_points.loc[:, int_cols].astype(int)
+    season = temp_points.groupby(player_col).agg({points_col: 'sum',
+                                                  points_col+against_col: 'sum',
+                                                  'Won': 'sum',
+                                                  rank_col+points_col: 'sum',
+                                                  'ExpectedWin': 'sum',
+                                                  'CloseWin': 'sum',
+                                                  'CloseLoss': 'sum'})
+    season = season.rename(columns={'Won': 'Wins', 'ExpectedWin': 'ExpectedWins',
+                                    'CloseWin': 'CloseWins', 'CloseLoss': 'CloseLosses'})
+    season = season.round({points_col: 2, points_col+against_col: 2, rank_col+points_col: 1})
+    season['TotalPoints'] = season.loc[:, 'Wins'] + season.loc[:, rank_col+points_col]
     season['Place'] = season.loc[:, 'TotalPoints'].rank(ascending=False)
     season = season.sort_values(by='Place', ascending=True)
     
     col_order = ['Place', player_col, points_col, points_col+against_col,
-                 'Wins', 'RankPoints', 'TotalPoints', 'ExpectedWins']
+                 'Wins', rank_col+points_col, 'TotalPoints', 'ExpectedWins',
+                 'CloseWins', 'CloseLosses']
     season = season.reset_index().loc[:, col_order]
     
     return season
 	
 	
-def generate_html_table(df, max_rows=float('Inf')):
-    return html.Table([html.Tr([html.Th(col) for col in df.columns])] +
-                      [html.Tr([html.Td(df.iloc[i][col]) for col in df.columns])
-                      for i in range(min(len(df), max_rows))])
+# def generate_html_table(df, max_rows=float('Inf')):
+#     return html.Table([html.Tr([html.Th(col) for col in df.columns])] +
+#                       [html.Tr([html.Td(df.iloc[i][col]) for col in df.columns])
+#                       for i in range(min(len(df), max_rows))])
 
 
 def generate_dash_table(df, max_rows=float('Inf')):
-     return dash_table.DataTable(
-                id='season-stats-dash-table',
-                columns=[{"name": col, "id": col} for col in df.columns], 
-                data=df.to_dict('records'),
-                style_table={'maxWidth': '750px'},
-                style_cell={'textAlign': 'center'},
-                style_as_list_view=True,
-                style_header={'fontWeight': 'bold'},
-#                style_data_conditional = [{
-#                    'if': {
-#                        'column_id': 'ExpectedWins',
-#                        'filter_query': '{ExpectedWins} > {Wins}'
-#                    },
-#                    'backgroundColor': '#D1FAC1'
-#                },
-#                {
-#                    'if': {
-#                        'column_id': 'ExpectedWins',
-#                        'filter_query': '{ExpectedWins} < {Wins}'
-#                    },
-#                    'backgroundColor': '#FAC7C1'
-#                }],
-                sort_action="native",
-                sort_mode="multi"
-            )
-
+    return dash_table.DataTable(
+        id='season-stats-dash-table',
+        columns=[{"name": col, "id": col} for col in df.columns], 
+        data=df.to_dict('records'),
+        style_table={'maxWidth': '900px'},
+        style_cell={'textAlign': 'center'},
+        style_as_list_view=True,
+        style_header={'fontWeight': 'bold'},
+        # style_data_conditional = [{
+        #     'if': {
+        #         'column_id': 'ExpectedWins',
+        #         'filter_query': '{ExpectedWins} > {Wins}'
+        #     },
+        #     'backgroundColor': '#D1FAC1'
+        # },
+        # {
+        #     'if': {
+        #         'column_id': 'ExpectedWins',
+        #         'filter_query': '{ExpectedWins} < {Wins}'
+        #     },
+        #     'backgroundColor': '#FAC7C1'
+        # }],
+        sort_action="native",
+        sort_mode="multi"
+    )
 
 def get_matchup_items(players: list, schedule: pd.DataFrame, items: list) -> list:
     """
@@ -179,10 +211,13 @@ def remaining_opponent_avg_rank(season: pd.DataFrame, schedule: pd.DataFrame, cu
     remaining_schedule = schedule.loc[schedule[WEEK_COL] > current_week, :]
     roar = []
     for p in season[PLAYER_COL].to_list():
-        opponents = remaining_schedule.loc[remaining_schedule[PLAYER_COL] == p, AGAINST_COL].to_list()
-        rank_points = [season.loc[season[PLAYER_COL] == opp, 'RankPoints'].iloc[0] for opp in opponents]
-        avg_ranks = [rank_points_to_avg_rank(rp, current_week) for rp in rank_points]
-        roar.append(round(sum(avg_ranks)/len(avg_ranks), 2))
+        if len(remaining_schedule) > 0:
+            opponents = remaining_schedule.loc[remaining_schedule[PLAYER_COL] == p, AGAINST_COL].to_list()
+            rank_points = [season.loc[season[PLAYER_COL] == opp, RANK_COL+POINTS_COL].iloc[0] for opp in opponents]
+            avg_ranks = [rank_points_to_avg_rank(rp, current_week) for rp in rank_points]
+            roar.append(round(sum(avg_ranks)/len(avg_ranks), 2))
+        else:
+            roar.append(0)
         
     return roar
 
@@ -193,6 +228,7 @@ WEEK_COL = 'Week'
 PLAYER_COL = 'Player'
 AGAINST_COL = 'Against'
 POINTS_COL = 'Points'
+RANK_COL = 'Rank'
 COLORS = ["#EC7063", "#AF7AC5", "#5DADE2", "#48C9B0", "#F9E79F", "#E59866",
           "#F06292", "#58D68D", "#AED6F1", "#F8BBD0"]
 
@@ -204,9 +240,12 @@ schedule_wide, points_wide = read_data(SCHEDULE_URL, POINTS_URL)
 # TODO: validation checks
 schedule = pd.melt(schedule_wide, id_vars=[WEEK_COL], var_name=PLAYER_COL, value_name=AGAINST_COL)
 points = supplement_points(points_wide, schedule, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL)
-points['RankPoints'] = points.groupby(WEEK_COL)[POINTS_COL].rank()/len(schedule[PLAYER_COL].unique())
+points[RANK_COL+POINTS_COL] = points.groupby(WEEK_COL)[POINTS_COL].rank()/len(schedule[PLAYER_COL].unique())
+points[RANK_COL+POINTS_COL+AGAINST_COL] = points.groupby(WEEK_COL)[POINTS_COL+AGAINST_COL].rank()/len(schedule[PLAYER_COL].unique())
+points['CloseLoss'] = close_match(points, False, POINTS_COL, AGAINST_COL)
+points['CloseWin'] = close_match(points, True, POINTS_COL, AGAINST_COL)
 points['ExpectedWin'] = expected_win(points, WEEK_COL, POINTS_COL)
-season = calculate_season_stats(points, PLAYER_COL, POINTS_COL, AGAINST_COL)
+season = calculate_season_stats(points, PLAYER_COL, POINTS_COL, AGAINST_COL, RANK_COL)
 
 PLAYERS = [col for col in schedule_wide.columns if col != WEEK_COL]
 #players = season.sort_values(by='Place', ascending=True)[PLAYER_COL].to_list()
@@ -227,11 +266,48 @@ app.layout = html.Div([
         ),
     html.Br(),
     dcc.Graph(id='week-points'),
-    dcc.Graph(id='season-dist-pts'),
-    dcc.Graph(id='season-dist-vs'),
-    dcc.Graph(id='season-dist-rank'),
     html.Br(),
-    generate_dash_table(season),
+    dcc.Dropdown(
+        id='plot-selector',
+        options=[{'label': lab, 'value': col} for lab, col
+                 in zip(['Points', 'Points Against', 'Rank Points',
+                         'Rank Points Against', "Opponents Season Score Rank (1 = opponent's lowest score of season, etc.)"],
+                        [POINTS_COL, POINTS_COL+AGAINST_COL, RANK_COL+POINTS_COL,
+                         RANK_COL+POINTS_COL+AGAINST_COL, AGAINST_COL+RANK_COL])],
+        value=POINTS_COL,
+        clearable=False
+    ),
+    html.Br(),
+    dcc.Graph(id='season-dist-selected'),
+    # dcc.Graph(id='season-dist-pts'),
+    # dcc.Graph(id='season-dist-vs'),
+    # dcc.Graph(id='season-dist-rank'),
+    html.Br(),
+    dash_table.DataTable(
+        id='season-stats-table',
+        columns=[{"name": col, "id": col} for col in season.columns],
+        style_table={'maxWidth': '900px'},
+        style_cell={'textAlign': 'center'},
+        style_as_list_view=True,
+        style_header={'fontWeight': 'bold'},
+        # style_data_conditional = [{
+        #     'if': {
+        #         'column_id': 'ExpectedWins',
+        #         'filter_query': '{ExpectedWins} > {Wins}'
+        #     },
+        #     'backgroundColor': '#D1FAC1'
+        # },
+        # {
+        #     'if': {
+        #         'column_id': 'ExpectedWins',
+        #         'filter_query': '{ExpectedWins} < {Wins}'
+        #     },
+        #     'backgroundColor': '#FAC7C1'
+        # }],
+        sort_action="native",
+        sort_mode="multi"
+    ),
+    # generate_dash_table(season),
     html.Br()
     ],
     style={'textAlign': 'center'})
@@ -287,12 +363,13 @@ def update_week_points_fig(week: int):
 
 def update_season_dist_plot(week: int, y_col: str):
     temp_points = points.loc[points[WEEK_COL] <= week, :]
-    temp_season = calculate_season_stats(temp_points, PLAYER_COL, POINTS_COL, AGAINST_COL)
+    temp_points[AGAINST_COL+RANK_COL] = temp_points.groupby(AGAINST_COL)[POINTS_COL+AGAINST_COL].rank()
+    temp_season = calculate_season_stats(temp_points, PLAYER_COL, POINTS_COL, AGAINST_COL, RANK_COL)
     temp_players = temp_season.sort_values(by='Place', ascending=True)[PLAYER_COL].to_list()
     fig = go.Figure()
     for player in temp_players:
         player_points = temp_points.loc[temp_points[PLAYER_COL] == player, :]
-        marker_colors = ['limegreen' if won else 'red' for won in player_points['Won'].to_list()]
+        # marker_colors = ['limegreen' if won else 'red' for won in player_points['Won'].to_list()]
         fig.add_trace(
             go.Violin(
                 x=player_points.loc[:, PLAYER_COL],
@@ -332,26 +409,45 @@ def update_season_dist_plot(week: int, y_col: str):
 
 
 @app.callback(
-    Output('season-dist-pts', 'figure'),
-    [Input('week-slider', 'value')]
+    Output('season-dist-selected', 'figure'),
+    [Input('week-slider', 'value'),
+     Input('plot-selector', 'value')]
 )
-def update_season_dist_pts_fig(week: int):
-    return update_season_dist_plot(week, POINTS_COL)
+def update_season_dist_pts_fig(week: int, col: str):
+    return update_season_dist_plot(week, col) 
+
+# @app.callback(
+#     Output('season-dist-pts', 'figure'),
+#     [Input('week-slider', 'value')]
+# )
+# def update_season_dist_pts_fig(week: int):
+#     return update_season_dist_plot(week, POINTS_COL)
+
+# @app.callback(
+#     Output('season-dist-vs', 'figure'),
+#     [Input('week-slider', 'value')]
+# )
+# def update_season_dist_vs_fig(week: int):
+#     return update_season_dist_plot(week, POINTS_COL+AGAINST_COL)
+
+# @app.callback(
+#     Output('season-dist-rank', 'figure'),
+#     [Input('week-slider', 'value')]
+# )
+# def update_season_dist_rank_fig(week: int):
+#     return update_season_dist_plot(week, RANK_COL+POINTS_COL)
 
 @app.callback(
-    Output('season-dist-vs', 'figure'),
+    Output('season-stats-table', 'data'),
     [Input('week-slider', 'value')]
 )
-def update_season_dist_vs_fig(week: int):
-    return update_season_dist_plot(week, POINTS_COL+AGAINST_COL)
-
-@app.callback(
-    Output('season-dist-rank', 'figure'),
-    [Input('week-slider', 'value')]
-)
-def update_season_dist_rank_fig(week: int):
-    return update_season_dist_plot(week, 'RankPoints')
+def update_season_stats_table(week: int):
+    temp_points = points.loc[points[WEEK_COL] <= week, :]
+    temp_points.loc[:, AGAINST_COL+RANK_COL] = temp_points.groupby(AGAINST_COL)[POINTS_COL+AGAINST_COL].rank()
+    temp_season = calculate_season_stats(temp_points, PLAYER_COL, POINTS_COL, AGAINST_COL, RANK_COL)
+    temp_season['RemainOppAvgRank'] = remaining_opponent_avg_rank(temp_season, schedule, week)
+    return temp_season.to_dict('records')
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+     app.run_server(debug=True)
