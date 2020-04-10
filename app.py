@@ -51,7 +51,7 @@ def supplement_points(points_wide: pd.DataFrame, schedule: pd.DataFrame,
     points = pd.merge(points, schedule, how='left', on=[id_col, player_col])
     points_against = points.loc[:, [id_col, player_col, points_col]]
     points_against = points_against.rename(columns={player_col: against_col,
-                                                  points_col: points_col+against_col})
+                                                    points_col: points_col+against_col})
     points = pd.merge(points, points_against, how='left', on=[id_col, against_col])
     points['Won'] = points.loc[:, points_col] > points.loc[:, points_col+against_col]
     
@@ -66,7 +66,7 @@ def rank_points():
 
 
 def close_match(points: pd.DataFrame, win: bool, points_col: str,
-                against_col: str, maxDiff: float = 10) -> pd.Series:
+                against_col: str, max_diff: float = 10) -> pd.Series:
     """Determine if a matchup is a close win or loss.
     
     Args:
@@ -74,14 +74,14 @@ def close_match(points: pd.DataFrame, win: bool, points_col: str,
         win: bool, True for win and False for loss
         points_col: str, points column name
         against_col: str, vs column name
-        maxDiff: float, max difference to be considered close
+        max_diff: float, max difference to be considered close
         
     Returns:
         Close: pd.Series, bool for if close
     """
     
     points_close = points.copy()
-    points_close['CloseMatch'] = abs(points_close.loc[:, points_col] - points_close.loc[:, points_col+against_col]) <= maxDiff
+    points_close['CloseMatch'] = abs(points_close.loc[:, points_col] - points_close.loc[:, points_col+against_col]) <= max_diff
     if win:
         points_close['Close'] = (points_close.loc[:, 'Won'].astype(int) + points_close.loc[:, 'CloseMatch'].astype(int)) == 2
     else:
@@ -156,32 +156,32 @@ def calculate_season_stats(points: pd.DataFrame, player_col: str, points_col: st
 #                       for i in range(min(len(df), max_rows))])
 
 
-def generate_dash_table(df, max_rows=float('Inf')):
-    return dash_table.DataTable(
-        id='season-stats-dash-table',
-        columns=[{"name": col, "id": col} for col in df.columns], 
-        data=df.to_dict('records'),
-        style_table={'maxWidth': '900px'},
-        style_cell={'textAlign': 'center'},
-        style_as_list_view=True,
-        style_header={'fontWeight': 'bold'},
-        # style_data_conditional = [{
-        #     'if': {
-        #         'column_id': 'ExpectedWins',
-        #         'filter_query': '{ExpectedWins} > {Wins}'
-        #     },
-        #     'backgroundColor': '#D1FAC1'
-        # },
-        # {
-        #     'if': {
-        #         'column_id': 'ExpectedWins',
-        #         'filter_query': '{ExpectedWins} < {Wins}'
-        #     },
-        #     'backgroundColor': '#FAC7C1'
-        # }],
-        sort_action="native",
-        sort_mode="multi"
-    )
+# def generate_dash_table(df, max_rows=float('Inf')):
+#     return dash_table.DataTable(
+#         id='season-stats-dash-table',
+#         columns=[{"name": col, "id": col} for col in df.columns], 
+#         data=df.to_dict('records'),
+#         style_table={'maxWidth': '900px'},
+#         style_cell={'textAlign': 'center'},
+#         style_as_list_view=True,
+#         style_header={'fontWeight': 'bold'},
+#         # style_data_conditional = [{
+#         #     'if': {
+#         #         'column_id': 'ExpectedWins',
+#         #         'filter_query': '{ExpectedWins} > {Wins}'
+#         #     },
+#         #     'backgroundColor': '#D1FAC1'
+#         # },
+#         # {
+#         #     'if': {
+#         #         'column_id': 'ExpectedWins',
+#         #         'filter_query': '{ExpectedWins} < {Wins}'
+#         #     },
+#         #     'backgroundColor': '#FAC7C1'
+#         # }],
+#         sort_action="native",
+#         sort_mode="multi"
+#     )
 
 def get_matchup_items(players: list, schedule: pd.DataFrame, items: list) -> list:
     """
@@ -198,6 +198,17 @@ def get_matchup_items(players: list, schedule: pd.DataFrame, items: list) -> lis
     items = [item_map[p] for p in players]
     
     return items
+
+
+def rank_and_score_weekly_values(points: pd.DataFrame, value_col: str, week_col: str,
+                                 rank_function) -> pd.Series:
+    """
+    """
+
+    value_ranks = points.groupby(week_col)[value_col].rank()
+    rank_scores = rank_function(value_ranks)
+
+    return rank_scores
 
 
 def rank_points_to_avg_rank(sum_points: float, current_week: int) -> float:
@@ -224,27 +235,35 @@ def remaining_opponent_avg_rank(season: pd.DataFrame, schedule: pd.DataFrame, cu
 	
 SCHEDULE_URL = '2PACX-1vS4BxaruR77zq40juWJSOIyTnXeM55dSFpUo1FKAS9MH2N5dX4B93eaTUafyiBVeg/pub?gid=1590080431'
 POINTS_URL = '2PACX-1vS4BxaruR77zq40juWJSOIyTnXeM55dSFpUo1FKAS9MH2N5dX4B93eaTUafyiBVeg/pub?gid=769575652'
+
 WEEK_COL = 'Week'
 PLAYER_COL = 'Player'
 AGAINST_COL = 'Against'
 POINTS_COL = 'Points'
 RANK_COL = 'Rank'
+
 COLORS = ["#EC7063", "#AF7AC5", "#5DADE2", "#48C9B0", "#F9E79F", "#E59866",
           "#F06292", "#58D68D", "#AED6F1", "#F8BBD0"]
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = Dash(__name__, external_stylesheets=external_stylesheets)
+app = Dash(__name__, external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
 server = app.server
 
 schedule_wide, points_wide = read_data(SCHEDULE_URL, POINTS_URL)
 # TODO: validation checks
+
 schedule = pd.melt(schedule_wide, id_vars=[WEEK_COL], var_name=PLAYER_COL, value_name=AGAINST_COL)
 points = supplement_points(points_wide, schedule, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL)
-points[RANK_COL+POINTS_COL] = points.groupby(WEEK_COL)[POINTS_COL].rank()/len(schedule[PLAYER_COL].unique())
-points[RANK_COL+POINTS_COL+AGAINST_COL] = points.groupby(WEEK_COL)[POINTS_COL+AGAINST_COL].rank()/len(schedule[PLAYER_COL].unique())
+
+points[RANK_COL+POINTS_COL] = rank_and_score_weekly_values(points, POINTS_COL, WEEK_COL,
+                                  lambda x: x/len(points[PLAYER_COL].unique()))
+# lambda x: x.map({val: val*2 for val in range(1, len(points[PLAYER_COL].unique()) + 1)})
+points[RANK_COL+POINTS_COL+AGAINST_COL] = rank_and_score_weekly_values(points, POINTS_COL+AGAINST_COL, WEEK_COL,
+                                  lambda x: x/len(points[PLAYER_COL].unique()))
+
 points['CloseLoss'] = close_match(points, False, POINTS_COL, AGAINST_COL)
 points['CloseWin'] = close_match(points, True, POINTS_COL, AGAINST_COL)
 points['ExpectedWin'] = expected_win(points, WEEK_COL, POINTS_COL)
+
 season = calculate_season_stats(points, PLAYER_COL, POINTS_COL, AGAINST_COL, RANK_COL)
 
 PLAYERS = [col for col in schedule_wide.columns if col != WEEK_COL]
@@ -260,7 +279,8 @@ app.layout = html.Div([
         min=schedule_wide[WEEK_COL].min(),
         max=schedule_wide[WEEK_COL].max(),
         value=current_week,
-        marks={str(wk): (str(wk) if wk != current_week else "Current") for wk in schedule_wide[WEEK_COL].unique()},
+        marks={str(wk): (str(wk) if wk != current_week else "Current")
+               for wk in schedule_wide[WEEK_COL].unique()},
         step=None
 #        updatemode='drag'  - not fast enough to update as it's dragged
         ),
