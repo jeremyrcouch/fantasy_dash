@@ -1,11 +1,11 @@
 import pandas as pd
+import plotly.graph_objs as go
 
 from dash import Dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
 from dash.dependencies import Input, Output
-import plotly.graph_objs as go
 
 
 def read_data(schedule_url: str, points_url: str) -> (pd.DataFrame, pd.DataFrame):
@@ -232,9 +232,8 @@ def remaining_opponent_avg_rank(season: pd.DataFrame, schedule: pd.DataFrame, cu
         
     return roar
 
-	
-SCHEDULE_URL = '2PACX-1vS4BxaruR77zq40juWJSOIyTnXeM55dSFpUo1FKAS9MH2N5dX4B93eaTUafyiBVeg/pub?gid=1590080431'
-POINTS_URL = '2PACX-1vS4BxaruR77zq40juWJSOIyTnXeM55dSFpUo1FKAS9MH2N5dX4B93eaTUafyiBVeg/pub?gid=769575652'
+SCHEDULE_URL = '2PACX-1vS4BxaruR77zq40juWJSOIyTnXeM55dSFpUo1FKAS9MH2N5dX4B93eaTUafyiBVeg/pub?gid=1184397163'
+POINTS_URL = '2PACX-1vS4BxaruR77zq40juWJSOIyTnXeM55dSFpUo1FKAS9MH2N5dX4B93eaTUafyiBVeg/pub?gid=2069019650'
 
 WEEK_COL = 'Week'
 PLAYER_COL = 'Player'
@@ -242,8 +241,8 @@ AGAINST_COL = 'Against'
 POINTS_COL = 'Points'
 RANK_COL = 'Rank'
 
-COLORS = ["#EC7063", "#AF7AC5", "#5DADE2", "#48C9B0", "#F9E79F", "#E59866",
-          "#F06292", "#58D68D", "#AED6F1", "#F8BBD0"]
+COLORS = ["#EC7063", "#AF7AC5", "#5DADE2", "#48C9B0", "#F9E79F",
+          "#E59866", "#F06292", "#58D68D", "#AED6F1", "#F8BBD0"]
 
 app = Dash(__name__, external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
 server = app.server
