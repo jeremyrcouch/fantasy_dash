@@ -1,0 +1,15 @@
+Week,Couch,Kale,Gobuty,Kreps,Weaver,Vogler,Leeds,Householder,Johnson,Pearce
+1,Kale,Couch,Kreps,Gobuty,Vogler,Weaver,Householder,Leeds,Pearce,Johnson
+2,Pearce,Kreps,Johnson,Kale,Leeds,Householder,Weaver,Vogler,Gobuty,Couch
+3,Kreps,Weaver,Vogler,Couch,Kale,Gobuty,Johnson,Pearce,Leeds,Householder
+4,Weaver,Pearce,Leeds,Householder,Couch,Johnson,Gobuty,Kreps,Vogler,Kale
+5,Vogler,Leeds,Householder,Johnson,Pearce,Couch,Kale,Gobuty,Kreps,Weaver
+6,Leeds,Householder,Johnson,Pearce,Vogler,Weaver,Couch,Kale,Gobuty,Kreps
+7,Householder,Johnson,Pearce,Weaver,Kreps,Leeds,Vogler,Couch,Kale,Gobuty
+8,Johnson,Pearce,Weaver,Vogler,Gobuty,Kreps,Householder,Leeds,Couch,Kale
+9,Pearce,Gobuty,Kale,Leeds,Householder,Johnson,Kreps,Weaver,Vogler,Couch
+10,Kale,Couch,Kreps,Gobuty,Leeds,Pearce,Weaver,Johnson,Householder,Vogler
+11,Gobuty,Kreps,Couch,Kale,Johnson,Householder,Pearce,Vogler,Weaver,Leeds
+12,Kreps,Weaver,Vogler,Couch,Kale,Gobuty,Johnson,Pearce,Leeds,Householder
+13,Weaver,Vogler,Leeds,Householder,Couch,Kale,Gobuty,Kreps,Pearce,Johnson
+14,Vogler,Leeds,Householder,Johnson,Pearce,Couch,Kale,Gobuty,Kreps,Weaver
