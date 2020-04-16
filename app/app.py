@@ -267,6 +267,16 @@ def get_matchup_items(
 
 
 def update_season_dist_plot(week: int, y_col: str):
+    """Updates specified season distribution plot. 
+
+    Args:
+        week: int, current week
+        y_col: str, name of column to plot
+
+    Returns:
+        distribution figure
+    """
+
     temp_points = points.loc[points[WEEK_COL] <= week, :]
     temp_points[COL_JOIN.format(
         AGAINST_COL,
@@ -435,6 +445,8 @@ app.layout = html.Div(
     ],
     style={"textAlign": "center"},
 )
+
+
 @app.callback(Output("week-points", "figure"),
                 [Input("week-slider", "value")])
 def update_week_points_fig(week: int):
@@ -495,6 +507,7 @@ def update_week_points_fig(week: int):
 
     return week_points_fig
 
+
 @app.callback(
     Output("season-dist-selected", "figure"),
     [Input("week-slider", "value"),
@@ -502,6 +515,8 @@ def update_week_points_fig(week: int):
 )
 def update_season_dist_pts_fig(week: int, col: str):
     return update_season_dist_plot(week, col)
+
+
 @app.callback(Output("season-stats-table", "data"),
                 [Input("week-slider", "value")])
 def update_season_stats_table(week: int):
@@ -514,6 +529,7 @@ def update_season_stats_table(week: int):
                                         PLAYER_COL, AGAINST_COL, POINTS_COL,
                                         RANK_COL)
     return temp_season.to_dict("records")
+
 
 if __name__ == "__main__":
 
