@@ -1,6 +1,6 @@
-# Project Title
+# Fantasy Football Dashboard
 
-Description here - one paragraph.
+Simple fantasy football dashboard.  Allows you to implement custom league scoring, visualize the weekly and seasonal stats, and share it with your league.
 
 ## Getting Started
 
@@ -44,43 +44,18 @@ Explain what these tests test and why
 Give an example
 ```
 
-### And coding style tests
+## Deploying with Heroku
 
-Explain what these tests test and why
+You can use Heroku to deploy your app, making it available for your league to see and interact with.  Every Heroku account gets a number of [free dyno hours](https://devcenter.heroku.com/articles/free-dyno-hours).  See Heroku's [Getting Started Guide for Python](https://devcenter.heroku.com/articles/getting-started-with-python?singlepage=true) for the steps to get setup.
 
-```
-Give an example
-```
-
-## Deployment
-
-Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+1. open powershell
+2. cd to the `fantasy_dashboard` repo
+3. run `heroku login` and you'll be prompted to login to your account via your browser
+4. run `git push heroku master`
+5. run `heroku ps:scale web=1`
+6. run `heroku open`
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
+This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
 
