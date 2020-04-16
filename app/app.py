@@ -143,8 +143,11 @@ def remaining_opponent_avg_rank(
     return roar
 
 
+# NOTE: grouped all this functionality together to make updating season stats..
+#       simple during app callbacks
 def collect_season_stats(
     points: pd.DataFrame,
+    schedule: pd.DataFrame,
     id_col: str,
     player_col: str,
     against_col: str,
@@ -155,6 +158,7 @@ def collect_season_stats(
 
     Args:
         points: DataFrame, weekly points data
+        schedule: DataFrame, schedule info for specific week
         id_col: str, name of identifier column
         player_col: str, player column name
         against_col: str, vs column name
@@ -265,7 +269,7 @@ def update_season_dist_plot(week: int, y_col: str):
         AGAINST_COL
     )[COL_JOIN.format(POINTS_COL, AGAINST_COL)].rank()
     temp_season = collect_season_stats(
-        temp_points, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL
+        temp_points, schedule, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL
     )
     temp_players = temp_season.sort_values(by="Place", ascending=True)[
         PLAYER_COL
@@ -308,6 +312,8 @@ if __name__ == "__main__":
     # TODO: other sources
     schedule_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(SCHEDULE_URL))
     points_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(POINTS_URL)).dropna()
+    # schedule_wide = pd.read_csv('./tests/data/schedule.csv')
+    # points_wide = pd.read_csv('./tests/data/points.csv')
     # TODO: validation checks
 
     PLAYERS = [col for col in schedule_wide.columns if col != WEEK_COL]
@@ -358,7 +364,7 @@ if __name__ == "__main__":
     )
 
     season = collect_season_stats(
-        points, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL
+        points, schedule, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL
     )
 
 
@@ -503,7 +509,7 @@ if __name__ == "__main__":
             AGAINST_COL
         )[COL_JOIN.format(POINTS_COL, AGAINST_COL)].rank()
         temp_season = collect_season_stats(
-            temp_points, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL
+            temp_points, schedule, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL
         )
         return temp_season.to_dict("records")
 
