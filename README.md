@@ -51,9 +51,10 @@ You can use Heroku to deploy your app, making it available for your league to se
 1. open powershell
 2. cd to the `fantasy_dashboard` repo
 3. run `heroku login` and you'll be prompted to login to your account via your browser
-4. run `git push heroku master`
-5. run `heroku ps:scale web=1`
-6. run `heroku open`
+4. if this is your first time deploying this app's code, run `heroku create` to create an app
+5. run `git push heroku master` to deploy your code to Heroku
+6. run `heroku ps:scale web=1` to have an instance of the app running
+7. run `heroku open` as a quick way to visit the app in your browser
 
 ## License
 
