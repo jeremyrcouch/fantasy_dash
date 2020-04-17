@@ -19,9 +19,7 @@ AGAINST_COL = "Against"
 POINTS_COL = "Points"
 RANK_COL = "Rank"
 COL_JOIN = "{} {}"
-
 CLOSE_MATCH_DIFF = 10
-
 COLORS = [
     "#EC7063",
     "#AF7AC5",
@@ -87,7 +85,7 @@ def rank_scoring(rank: float, num_players: int) -> float:
 
     return rank/num_players
 
-    
+
 def rank_points_to_avg_rank(sum_points: float, current_week: int) -> float:
     """Average rank (1 highest, 10 lowest) based on total rank points at current week.
     Assumes 10 players, 1st = 1, 10th = 0.1.
@@ -352,17 +350,12 @@ points["Won"] = (
 # TODO: how to handle ties?
 # TODO: how does .rank() handle ties in points.. and how does this impact rank -> score
 points[RANK_COL] = points.groupby(WEEK_COL)[POINTS_COL].rank()
-points[COL_JOIN.format(AGAINST_COL, RANK_COL)
-      ] = points.groupby(WEEK_COL)[COL_JOIN.format(POINTS_COL, AGAINST_COL)].rank()
-points[COL_JOIN.format(RANK_COL,
-                       POINTS_COL)] = rank_scoring(points.loc[:, RANK_COL], len(PLAYERS))
-points[COL_JOIN.format(COL_JOIN.format(RANK_COL, POINTS_COL),
-                       AGAINST_COL)] = rank_scoring(
-                           points.loc[:, COL_JOIN.format(AGAINST_COL, RANK_COL)],
-                           len(PLAYERS)
-                       )
-
-points.to_csv('./temp.csv', index=False)
+points[COL_JOIN.format(AGAINST_COL, RANK_COL)] = \
+    points.groupby(WEEK_COL)[COL_JOIN.format(POINTS_COL, AGAINST_COL)].rank()
+points[COL_JOIN.format(RANK_COL, POINTS_COL)] = \
+    rank_scoring(points.loc[:, RANK_COL], len(PLAYERS))
+points[COL_JOIN.format(COL_JOIN.format(RANK_COL, POINTS_COL), AGAINST_COL)] = \
+    rank_scoring(points.loc[:, COL_JOIN.format(AGAINST_COL, RANK_COL)], len(PLAYERS))
 
 points["Close Match"] = (
     abs(
@@ -450,8 +443,20 @@ app.layout = html.Div(
 )
 
 
-@app.callback(Output("week-points", "figure"), [Input("week-slider", "value")])
+@app.callback(
+    Output("week-points", "figure"),
+    [Input("week-slider", "value")]
+)
 def update_week_points_fig(week: int):
+    """Updates current week's points figure. 
+
+    Args:
+        week: int, current week
+
+    Returns:
+        figure
+    """
+
     week_schedule = schedule.loc[schedule[WEEK_COL] == week, :]
     if week > current_week:
         week_points = [1]*len(PLAYERS)
@@ -464,6 +469,7 @@ def update_week_points_fig(week: int):
         week_points = week_points_df[POINTS_COL].to_list()
         week_players = week_points_df[PLAYER_COL].to_list()
         week_won = [int(won) for won in week_points_df["Won"].to_list()]
+
     week_colors = [COLORS[PLAYERS.index(wp)] for wp in week_players]
     matchup_numbers = ["<b>{}</b>".format(i + 1) for i in range(int(len(week_players)/2))]
     week_texts = get_matchup_items(
@@ -512,15 +518,27 @@ def update_week_points_fig(week: int):
      Input("plot-selector", "value")],
 )
 def update_season_dist_pts_fig(week: int, col: str):
+    """Callback wrapper around update_season_dist_plot."""
     return update_season_dist_plot(week, col)
 
 
-@app.callback(Output("season-stats-table", "data"), [Input("week-slider", "value")])
+@app.callback(
+    Output("season-stats-table", "data"),
+    [Input("week-slider", "value")]
+)
 def update_season_stats_table(week: int):
+    """Updates season stats table up to current week.
+
+    Args:
+        week: int, current week
+
+    Returns:
+        figure
+    """
+
     temp_points = points.loc[points[WEEK_COL] <= week, :]
-    temp_points.loc[:, COL_JOIN.format(AGAINST_COL, RANK_COL)] = temp_points.groupby(
-        AGAINST_COL
-    )[COL_JOIN.format(POINTS_COL, AGAINST_COL)].rank()
+    temp_points.loc[:, COL_JOIN.format(AGAINST_COL, RANK_COL)] = \
+        temp_points.groupby(AGAINST_COL)[COL_JOIN.format(POINTS_COL, AGAINST_COL)].rank()
     temp_season = collect_season_stats(
         temp_points, schedule, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL
     )
