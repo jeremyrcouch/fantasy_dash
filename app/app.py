@@ -74,6 +74,20 @@ def determine_points_against(
     return points_against
 
 
+def rank_scoring(rank: float, num_players: int) -> float:
+    """Convert rank into a score (points).
+
+    Args:
+        rank: float, rank value
+        num_players: int, number of players in league
+    
+    Returns:
+        _: float, score value (points)
+    """
+
+    return rank/num_players
+
+    
 def rank_points_to_avg_rank(sum_points: float, current_week: int) -> float:
     """Average rank (1 highest, 10 lowest) based on total rank points at current week.
     Assumes 10 players, 1st = 1, 10th = 0.1.
@@ -336,13 +350,19 @@ points["Won"] = (
     points.loc[:, POINTS_COL] > points.loc[:, COL_JOIN.format(POINTS_COL, AGAINST_COL)]
 )
 # TODO: how to handle ties?
-
+# TODO: how does .rank() handle ties in points.. and how does this impact rank -> score
 points[RANK_COL] = points.groupby(WEEK_COL)[POINTS_COL].rank()
 points[COL_JOIN.format(AGAINST_COL, RANK_COL)
       ] = points.groupby(WEEK_COL)[COL_JOIN.format(POINTS_COL, AGAINST_COL)].rank()
-points[COL_JOIN.format(RANK_COL, POINTS_COL)] = points.loc[:, RANK_COL]/len(PLAYERS)
-points[COL_JOIN.format(COL_JOIN.format(RANK_COL, POINTS_COL), AGAINST_COL)
-      ] = points[COL_JOIN.format(AGAINST_COL, RANK_COL)]/len(PLAYERS)
+points[COL_JOIN.format(RANK_COL,
+                       POINTS_COL)] = rank_scoring(points.loc[:, RANK_COL], len(PLAYERS))
+points[COL_JOIN.format(COL_JOIN.format(RANK_COL, POINTS_COL),
+                       AGAINST_COL)] = rank_scoring(
+                           points.loc[:, COL_JOIN.format(AGAINST_COL, RANK_COL)],
+                           len(PLAYERS)
+                       )
+
+points.to_csv('./temp.csv', index=False)
 
 points["Close Match"] = (
     abs(

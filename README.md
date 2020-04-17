@@ -42,6 +42,15 @@ From the `fantasy_dashboard` folder, run all tests with:
 pytest tests/test_app.py
 ```
 
+## Modifying Scoring
+
+Scoring can be modified in any number of ways by adjusting the code.  Some options:
+- Change the number of points awarded for winning
+- Adjust how points are awared for weekly ranking
+- Add your own scoring logic
+
+As an example, to change how points are awarded based on each player's weekly ranking, you can change the `rank_scoring` function.  If you do, you'll want to update or remove the corresponding test for the function in `./tests/test_app.py`.
+
 ## Data
 
 The dashboard requires two input datasets: the weekly matchup schedule for the season and the weekly points for each player.  See the `points.csv` and `schedule.csv` in `./tests/data/` for examples of these in CSV form.

@@ -7,6 +7,7 @@ from app.app import (
     remaining_opponent_avg_rank,
     collect_season_stats,
     get_matchup_items,
+    rank_scoring,
 )
 from app.app import WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL, COL_JOIN
 
@@ -33,7 +34,7 @@ def season():
     return pd.read_csv("{}{}".format(DATA_DIR, "season.csv"))
 
 
-def test_determine_points_against(points_wide, schedule_wide) -> float:
+def test_determine_points_against(points_wide, schedule_wide):
     # arrange
     points_data = pd.melt(
         points_wide, id_vars=[WEEK_COL], var_name=PLAYER_COL, value_name=POINTS_COL
@@ -57,6 +58,20 @@ def test_determine_points_against(points_wide, schedule_wide) -> float:
     assert len(points_against) == len(points_data)
 
 
+def test_rank_scoring():
+    # arrange
+    rank = 1
+    num_players = 10
+    expected_score = 0.1
+
+    # act
+    score = rank_scoring(rank, num_players)
+
+    # assert
+    assert isinstance(score, float)
+    assert score == expected_score
+
+
 @pytest.mark.parametrize(
     "rank_points, current_week, expected_avg",
     [
@@ -65,7 +80,7 @@ def test_determine_points_against(points_wide, schedule_wide) -> float:
         pytest.param(6, 10, 5, id="later-week"),
     ],
 )
-def test_rank_points_to_avg_rank(rank_points, current_week, expected_avg) -> float:
+def test_rank_points_to_avg_rank(rank_points, current_week, expected_avg):
     # arrange
 
     # act
