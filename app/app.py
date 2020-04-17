@@ -321,11 +321,14 @@ app = Dash(
     external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"])
 server = app.server
 
-# TODO: other sources
-schedule_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(SCHEDULE_URL))
-points_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(POINTS_URL)).dropna()
-# schedule_wide = pd.read_csv('./tests/data/schedule.csv')
-# points_wide = pd.read_csv('./tests/data/points.csv')
+### Google Sheets ###
+# schedule_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(SCHEDULE_URL))
+# points_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(POINTS_URL)).dropna()
+
+### Local Data ###
+schedule_wide = pd.read_csv('./data/schedule.csv')
+points_wide = pd.read_csv('./data/points.csv')
+
 # TODO: validation checks
 
 PLAYERS = [col for col in schedule_wide.columns if col != WEEK_COL]
