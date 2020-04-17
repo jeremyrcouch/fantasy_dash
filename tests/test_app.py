@@ -24,8 +24,8 @@ def points_wide():
 
 
 @pytest.fixture
-def points_complete():
-    return pd.read_csv("{}{}".format(DATA_DIR, "points_complete.csv"))
+def points_final():
+    return pd.read_csv("{}{}".format(DATA_DIR, "points_final.csv"))
 
 
 @pytest.fixture
@@ -106,7 +106,7 @@ def test_remaining_opponent_avg_rank(current_week, season, schedule_wide):
         assert min(roar) > 0
 
 
-def test_collect_season_stats(season, points_complete, schedule_wide):
+def test_collect_season_stats(season, points_final, schedule_wide):
     # arrange
     schedule = pd.melt(
         schedule_wide, id_vars=[WEEK_COL], var_name=PLAYER_COL, value_name=AGAINST_COL
@@ -114,7 +114,7 @@ def test_collect_season_stats(season, points_complete, schedule_wide):
 
     # act
     season_test = collect_season_stats(
-        points_complete,
+        points_final,
         schedule,
         WEEK_COL,
         PLAYER_COL,
@@ -128,7 +128,7 @@ def test_collect_season_stats(season, points_complete, schedule_wide):
     assert season_test["Place"].to_list() == sorted(season_test["Place"].to_list())
 
 
-def test_get_matchup_items(points_complete, schedule_wide):
+def test_get_matchup_items(points_final, schedule_wide):
     # arrange
     week = 10
     schedule = pd.melt(
