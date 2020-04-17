@@ -10,7 +10,6 @@ from app.app import (
 )
 from app.app import WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL, COL_JOIN
 
-
 DATA_DIR = "./tests/data/"
 
 
@@ -42,9 +41,10 @@ def test_determine_points_against(points_wide, schedule_wide) -> float:
     schedule = pd.melt(
         schedule_wide, id_vars=[WEEK_COL], var_name=PLAYER_COL, value_name=AGAINST_COL
     )
-    expected_cols = set(
-        [PLAYER_COL, WEEK_COL, AGAINST_COL, COL_JOIN.format(POINTS_COL, AGAINST_COL)]
-    )
+    expected_cols = set([
+        PLAYER_COL, WEEK_COL, AGAINST_COL,
+        COL_JOIN.format(POINTS_COL, AGAINST_COL)
+    ])
 
     # act
     points_against = determine_points_against(
@@ -77,7 +77,8 @@ def test_rank_points_to_avg_rank(rank_points, current_week, expected_avg) -> flo
 
 
 @pytest.mark.parametrize(
-    "current_week", [pytest.param(10, id="middle"), pytest.param(14, id="last")]
+    "current_week", [pytest.param(10, id="middle"),
+                     pytest.param(14, id="last")]
 )
 def test_remaining_opponent_avg_rank(current_week, season, schedule_wide):
     # arrange
@@ -135,7 +136,7 @@ def test_get_matchup_items(points_complete, schedule_wide):
     )
     week_schedule = schedule.loc[schedule[WEEK_COL] == week, :]
     week_players = [col for col in schedule_wide.columns if col != WEEK_COL]
-    items = ["{}".format(i + 1) for i in range(int(len(week_players) / 2))]
+    items = ["{}".format(i + 1) for i in range(int(len(week_players)/2))]
     expected_items = ["1", "1", "2", "2", "3", "4", "3", "5", "5", "4"]
 
     # act

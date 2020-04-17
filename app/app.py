@@ -9,7 +9,6 @@ import dash_html_components as html
 import dash_table
 from dash.dependencies import Input, Output
 
-
 GOOGLE_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/{}&single=true&output=csv"
 SCHEDULE_URL = "2PACX-1vS4BxaruR77zq40juWJSOIyTnXeM55dSFpUo1FKAS9MH2N5dX4B93eaTUafyiBVeg/pub?gid=1184397163"
 POINTS_URL = "2PACX-1vS4BxaruR77zq40juWJSOIyTnXeM55dSFpUo1FKAS9MH2N5dX4B93eaTUafyiBVeg/pub?gid=2069019650"
@@ -38,12 +37,12 @@ COLORS = [
 
 
 def determine_points_against(
-        points_data: pd.DataFrame,
-        schedule: pd.DataFrame,
-        id_col: str,
-        player_col: str,
-        against_col: str,
-        points_col: str,
+    points_data: pd.DataFrame,
+    schedule: pd.DataFrame,
+    id_col: str,
+    player_col: str,
+    against_col: str,
+    points_col: str,
 ) -> pd.DataFrame:
     """Determine points against.
     
@@ -59,21 +58,18 @@ def determine_points_against(
         points_against: DataFrame, weekly points against
     """
 
-    against = pd.merge(points_data,
-                       schedule,
-                       on=[id_col, player_col],
-                       how="left")
+    against = pd.merge(points_data, schedule, on=[id_col, player_col], how="left")
     against = against.drop([points_col], axis=1)
     against_points = points_data.loc[:, [id_col, player_col, points_col]]
     against_points = against_points.rename(
         columns={
             player_col: against_col,
             points_col: COL_JOIN.format(points_col, against_col),
-        })
-    points_against = pd.merge(against,
-                              against_points,
-                              on=[id_col, against_col],
-                              how="left")
+        }
+    )
+    points_against = pd.merge(
+        against, against_points, on=[id_col, against_col], how="left"
+    )
 
     return points_against
 
@@ -90,18 +86,18 @@ def rank_points_to_avg_rank(sum_points: float, current_week: int) -> float:
         _: float, average rank
     """
 
-    return (1 - (sum_points / current_week)) * 10 + 1
+    return (1 - (sum_points/current_week))*10 + 1
 
 
 def remaining_opponent_avg_rank(
-        season: pd.DataFrame,
-        schedule: pd.DataFrame,
-        current_week: int,
-        id_col: str,
-        player_col: str,
-        against_col: str,
-        points_col: str,
-        rank_col: str,
+    season: pd.DataFrame,
+    schedule: pd.DataFrame,
+    current_week: int,
+    id_col: str,
+    player_col: str,
+    against_col: str,
+    points_col: str,
+    rank_col: str,
 ) -> List[float]:
     """Average rank of remaining opponents in schedule for each player.
 
@@ -123,20 +119,21 @@ def remaining_opponent_avg_rank(
     roar = []
     for p in season[player_col].to_list():
         if len(remaining_schedule) > 0:
-            opponents = remaining_schedule.loc[remaining_schedule[player_col]
-                                               == p, against_col]
+            opponents = remaining_schedule.loc[remaining_schedule[player_col] ==
+                                               p, against_col]
             rank_points = []
             for opp in opponents.to_list():
                 rank_points.append(
                     season.loc[season[player_col] == opp,
-                               COL_JOIN.format(rank_col, points_col)].iloc[0])
+                               COL_JOIN.format(rank_col, points_col)].iloc[0]
+                )
             # only works for 10 players, 0.1 to 1 rank pts per week
             # if use this version, change column to "Remain Opp Avg Rank"
             # avg_ranks = [
             #     rank_points_to_avg_rank(rp, current_week) for rp in rank_points
             # ]
-            avg_ranks = [rp / current_week for rp in rank_points]
-            roar.append(round(sum(avg_ranks) / len(avg_ranks), 2))
+            avg_ranks = [rp/current_week for rp in rank_points]
+            roar.append(round(sum(avg_ranks)/len(avg_ranks), 2))
         else:
             roar.append(0)
 
@@ -146,13 +143,13 @@ def remaining_opponent_avg_rank(
 # NOTE: grouped all this functionality together to make updating season stats..
 #       simple during app callbacks
 def collect_season_stats(
-        points: pd.DataFrame,
-        schedule: pd.DataFrame,
-        id_col: str,
-        player_col: str,
-        against_col: str,
-        points_col: str,
-        rank_col: str,
+    points: pd.DataFrame,
+    schedule: pd.DataFrame,
+    id_col: str,
+    player_col: str,
+    against_col: str,
+    points_col: str,
+    rank_col: str,
 ) -> pd.DataFrame:
     """Collect season statistics given points data.
 
@@ -170,20 +167,13 @@ def collect_season_stats(
     """
 
     season = points.groupby(player_col).agg({
-        points_col:
-        "sum",
-        COL_JOIN.format(points_col, against_col):
-        "sum",
-        "Won":
-        "sum",
-        COL_JOIN.format(rank_col, points_col):
-        "sum",
-        "Expected Win":
-        "sum",
-        "Close Win":
-        "sum",
-        "Close Loss":
-        "sum",
+        points_col: "sum",
+        COL_JOIN.format(points_col, against_col): "sum",
+        "Won": "sum",
+        COL_JOIN.format(rank_col, points_col): "sum",
+        "Expected Win": "sum",
+        "Close Win": "sum",
+        "Close Loss": "sum",
     })
     season = season.rename(
         columns={
@@ -191,15 +181,16 @@ def collect_season_stats(
             "Expected Win": "Expected Wins",
             "Close Win": "Close Wins",
             "Close Loss": "Close Losses",
-        })
+        }
+    )
     season = season.round({
         points_col: 2,
         COL_JOIN.format(points_col, against_col): 2,
         COL_JOIN.format(rank_col, points_col): 1,
     })
     season["Total Points"] = (
-        season.loc[:, "Wins"] +
-        season.loc[:, COL_JOIN.format(rank_col, points_col)])
+        season.loc[:, "Wins"] + season.loc[:, COL_JOIN.format(rank_col, points_col)]
+    )
     season["Place"] = season.loc[:, "Total Points"].rank(ascending=False)
     season = season.sort_values(by="Place", ascending=True)
 
@@ -233,11 +224,11 @@ def collect_season_stats(
 
 
 def get_matchup_items(
-        players: List[str],
-        schedule: pd.DataFrame,
-        items: list,
-        player_col: str,
-        against_col: str,
+    players: List[str],
+    schedule: pd.DataFrame,
+    items: list,
+    player_col: str,
+    against_col: str,
 ) -> list:
     """Assign objects to matched up pairs of players for a given week.
 
@@ -255,8 +246,7 @@ def get_matchup_items(
     item_map = {}
     item_index = 0
     for player in players:
-        against = schedule.loc[schedule[player_col] ==
-                               player, against_col].iloc[0]
+        against = schedule.loc[schedule[player_col] == player, against_col].iloc[0]
         if player not in item_map:
             item_map[player] = items[item_index]
             item_map[against] = items[item_index]
@@ -279,14 +269,13 @@ def update_season_dist_plot(week: int, y_col: str):
 
     temp_points = points.loc[points[WEEK_COL] <= week, :]
     temp_points[COL_JOIN.format(
-        AGAINST_COL,
-        RANK_COL)] = temp_points.groupby(AGAINST_COL)[COL_JOIN.format(
-            POINTS_COL, AGAINST_COL)].rank()
-    temp_season = collect_season_stats(temp_points, schedule, WEEK_COL,
-                                       PLAYER_COL, AGAINST_COL, POINTS_COL,
-                                       RANK_COL)
-    temp_players = temp_season.sort_values(
-        by="Place", ascending=True)[PLAYER_COL].to_list()
+        AGAINST_COL, RANK_COL
+    )] = temp_points.groupby(AGAINST_COL)[COL_JOIN.format(POINTS_COL, AGAINST_COL)].rank()
+    temp_season = collect_season_stats(
+        temp_points, schedule, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL
+    )
+    temp_players = temp_season.sort_values(by="Place",
+                                           ascending=True)[PLAYER_COL].to_list()
     fig = go.Figure()
     for player in temp_players:
         player_points = temp_points.loc[temp_points[PLAYER_COL] == player, :]
@@ -302,11 +291,10 @@ def update_season_dist_plot(week: int, y_col: str):
                 pointpos=0,
                 meanline_visible=True,
                 points="all",
-            ))
+            )
+        )
     fig.update_xaxes(tickfont={"size": 18})
-    fig.update_yaxes(title_text=y_col,
-                     title_font={"size": 22},
-                     tickfont={"size": 18})
+    fig.update_yaxes(title_text=y_col, title_font={"size": 22}, tickfont={"size": 18})
     fig.update_layout(
         autosize=False,
         height=400,
@@ -316,9 +304,7 @@ def update_season_dist_plot(week: int, y_col: str):
     return fig
 
 
-app = Dash(
-    __name__,
-    external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"])
+app = Dash(__name__, external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"])
 server = app.server
 
 ### Google Sheets ###
@@ -333,55 +319,51 @@ points_wide = pd.read_csv('./data/points.csv')
 
 PLAYERS = [col for col in schedule_wide.columns if col != WEEK_COL]
 
-schedule = pd.melt(schedule_wide,
-                    id_vars=[WEEK_COL],
-                    var_name=PLAYER_COL,
-                    value_name=AGAINST_COL)
-points_data = pd.melt(points_wide,
-                        id_vars=[WEEK_COL],
-                        var_name=PLAYER_COL,
-                        value_name=POINTS_COL)
-points_against = determine_points_against(points_data, schedule, WEEK_COL,
-                                            PLAYER_COL, AGAINST_COL,
-                                            POINTS_COL)
-points = pd.merge(points_data,
-                    points_against,
-                    how="left",
-                    on=[WEEK_COL, PLAYER_COL])
+schedule = pd.melt(
+    schedule_wide, id_vars=[WEEK_COL], var_name=PLAYER_COL, value_name=AGAINST_COL
+)
+points_data = pd.melt(
+    points_wide, id_vars=[WEEK_COL], var_name=PLAYER_COL, value_name=POINTS_COL
+)
+points_against = determine_points_against(
+    points_data, schedule, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL
+)
+points = pd.merge(points_data, points_against, how="left", on=[WEEK_COL, PLAYER_COL])
 
 current_week = points.loc[:, WEEK_COL].max()
 
-points["Won"] = (points.loc[:, POINTS_COL] >
-                    points.loc[:, COL_JOIN.format(POINTS_COL, AGAINST_COL)])
+points["Won"] = (
+    points.loc[:, POINTS_COL] > points.loc[:, COL_JOIN.format(POINTS_COL, AGAINST_COL)]
+)
 # TODO: how to handle ties?
 
 points[RANK_COL] = points.groupby(WEEK_COL)[POINTS_COL].rank()
-points[COL_JOIN.format(
-    AGAINST_COL, RANK_COL)] = points.groupby(WEEK_COL)[COL_JOIN.format(
-        POINTS_COL, AGAINST_COL)].rank()
-points[COL_JOIN.format(
-    RANK_COL, POINTS_COL)] = points.loc[:, RANK_COL] / len(PLAYERS)
-points[COL_JOIN.format(COL_JOIN.format(RANK_COL, POINTS_COL),
-                        AGAINST_COL)] = points[COL_JOIN.format(
-                            AGAINST_COL, RANK_COL)] / len(PLAYERS)
+points[COL_JOIN.format(AGAINST_COL, RANK_COL)
+      ] = points.groupby(WEEK_COL)[COL_JOIN.format(POINTS_COL, AGAINST_COL)].rank()
+points[COL_JOIN.format(RANK_COL, POINTS_COL)] = points.loc[:, RANK_COL]/len(PLAYERS)
+points[COL_JOIN.format(COL_JOIN.format(RANK_COL, POINTS_COL), AGAINST_COL)
+      ] = points[COL_JOIN.format(AGAINST_COL, RANK_COL)]/len(PLAYERS)
 
 points["Close Match"] = (
-    abs(points.loc[:, POINTS_COL] -
-        points.loc[:, COL_JOIN.format(POINTS_COL, AGAINST_COL)]) <=
-    CLOSE_MATCH_DIFF)
-points["Close Loss"] = (
-    ~points.loc[:, "Won"]) & points.loc[:, "Close Match"]
+    abs(
+        points.loc[:, POINTS_COL] -
+        points.loc[:, COL_JOIN.format(POINTS_COL, AGAINST_COL)]
+    ) <= CLOSE_MATCH_DIFF
+)
+points["Close Loss"] = (~points.loc[:, "Won"]) & points.loc[:, "Close Match"]
 points["Close Win"] = points.loc[:, "Won"] & points.loc[:, "Close Match"]
 
 # TODO: generic stat function??
 week_med = points.groupby(WEEK_COL)[POINTS_COL].median().reset_index()
 week_med = week_med.rename(columns={POINTS_COL: "Weekly Median Points"})
 points = pd.merge(points, week_med, on=WEEK_COL, how="left")
-points["Expected Win"] = (points.loc[:, POINTS_COL] >
-                            points.loc[:, "Weekly Median Points"])
+points["Expected Win"] = (
+    points.loc[:, POINTS_COL] > points.loc[:, "Weekly Median Points"]
+)
 
-season = collect_season_stats(points, schedule, WEEK_COL, PLAYER_COL,
-                                AGAINST_COL, POINTS_COL, RANK_COL)
+season = collect_season_stats(
+    points, schedule, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL
+)
 
 app.layout = html.Div(
     [
@@ -412,16 +394,14 @@ app.layout = html.Div(
                     "Points",
                     COL_JOIN.format(POINTS_COL, AGAINST_COL),
                     COL_JOIN.format(RANK_COL, POINTS_COL),
-                    COL_JOIN.format(COL_JOIN.format(RANK_COL, POINTS_COL),
-                                    AGAINST_COL),
+                    COL_JOIN.format(COL_JOIN.format(RANK_COL, POINTS_COL), AGAINST_COL),
                     "Opponents Season Score Rank (1 = opponent's lowest score of season, etc.)",
                 ],
                 [
                     POINTS_COL,
                     COL_JOIN.format(POINTS_COL, AGAINST_COL),
                     COL_JOIN.format(RANK_COL, POINTS_COL),
-                    COL_JOIN.format(COL_JOIN.format(RANK_COL, POINTS_COL),
-                                    AGAINST_COL),
+                    COL_JOIN.format(COL_JOIN.format(RANK_COL, POINTS_COL), AGAINST_COL),
                     COL_JOIN.format(AGAINST_COL, RANK_COL),
                 ],
             )],
@@ -450,37 +430,32 @@ app.layout = html.Div(
 )
 
 
-@app.callback(Output("week-points", "figure"),
-                [Input("week-slider", "value")])
+@app.callback(Output("week-points", "figure"), [Input("week-slider", "value")])
 def update_week_points_fig(week: int):
     week_schedule = schedule.loc[schedule[WEEK_COL] == week, :]
     if week > current_week:
-        week_points = [1] * len(PLAYERS)
+        week_points = [1]*len(PLAYERS)
         week_players = PLAYERS.copy()
-        week_won = [0] * len(PLAYERS)
+        week_won = [0]*len(PLAYERS)
         # return go.Figure([go.Bar(x=[], y=[])])
     else:
         week_points_df = points.loc[(points[WEEK_COL] == week), :]
-        week_points_df = week_points_df.sort_values(by=POINTS_COL,
-                                                    ascending=False)
+        week_points_df = week_points_df.sort_values(by=POINTS_COL, ascending=False)
         week_points = week_points_df[POINTS_COL].to_list()
         week_players = week_points_df[PLAYER_COL].to_list()
         week_won = [int(won) for won in week_points_df["Won"].to_list()]
     week_colors = [COLORS[PLAYERS.index(wp)] for wp in week_players]
-    matchup_numbers = [
-        "<b>{}</b>".format(i + 1)
-        for i in range(int(len(week_players) / 2))
-    ]
-    week_texts = get_matchup_items(week_players, week_schedule,
-                                    matchup_numbers, PLAYER_COL,
-                                    AGAINST_COL)
+    matchup_numbers = ["<b>{}</b>".format(i + 1) for i in range(int(len(week_players)/2))]
+    week_texts = get_matchup_items(
+        week_players, week_schedule, matchup_numbers, PLAYER_COL, AGAINST_COL
+    )
 
     week_points_fig = go.Figure([
         go.Bar(
             x=week_players,
             y=week_points,
             marker_color=week_colors,
-            marker_line_width=[2 * ww for ww in week_won],
+            marker_line_width=[2*ww for ww in week_won],
             marker_line_color="black",
             text=week_texts,
             textfont={"size": 16},
@@ -489,9 +464,9 @@ def update_week_points_fig(week: int):
         )
     ])
     week_points_fig.update_xaxes(tickfont={"size": 18})
-    week_points_fig.update_yaxes(title_text=POINTS_COL,
-                                    title_font={"size": 22},
-                                    tickfont={"size": 18})
+    week_points_fig.update_yaxes(
+        title_text=POINTS_COL, title_font={"size": 22}, tickfont={"size": 18}
+    )
 
     week_points_fig.update_layout(
         autosize=False,
@@ -514,23 +489,21 @@ def update_week_points_fig(week: int):
 @app.callback(
     Output("season-dist-selected", "figure"),
     [Input("week-slider", "value"),
-        Input("plot-selector", "value")],
+     Input("plot-selector", "value")],
 )
 def update_season_dist_pts_fig(week: int, col: str):
     return update_season_dist_plot(week, col)
 
 
-@app.callback(Output("season-stats-table", "data"),
-                [Input("week-slider", "value")])
+@app.callback(Output("season-stats-table", "data"), [Input("week-slider", "value")])
 def update_season_stats_table(week: int):
     temp_points = points.loc[points[WEEK_COL] <= week, :]
-    temp_points.loc[:, COL_JOIN.
-                    format(AGAINST_COL, RANK_COL)] = temp_points.groupby(
-                        AGAINST_COL)[COL_JOIN.format(
-                            POINTS_COL, AGAINST_COL)].rank()
-    temp_season = collect_season_stats(temp_points, schedule, WEEK_COL,
-                                        PLAYER_COL, AGAINST_COL, POINTS_COL,
-                                        RANK_COL)
+    temp_points.loc[:, COL_JOIN.format(AGAINST_COL, RANK_COL)] = temp_points.groupby(
+        AGAINST_COL
+    )[COL_JOIN.format(POINTS_COL, AGAINST_COL)].rank()
+    temp_season = collect_season_stats(
+        temp_points, schedule, WEEK_COL, PLAYER_COL, AGAINST_COL, POINTS_COL, RANK_COL
+    )
     return temp_season.to_dict("records")
 
 
