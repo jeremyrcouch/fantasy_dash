@@ -24,7 +24,7 @@ A simple fantasy football dashboard.
    conda activate fantasy
    ```
 
-4. Use `cd` to the navigate to the directory where you want the repo
+4. Use `cd` to navigate to the directory where you want the repo
 5. Clone the repo:
    ```
    git clone https://github.com/jeremyrcouch/fantasy_dashboard.git
@@ -49,11 +49,11 @@ Scoring can be modified in any number of ways by adjusting the code.  Some optio
 - Adjust how points are awared for weekly ranking
 - Add your own scoring logic
 
-As an example, to change how points are awarded based on each player's weekly ranking, you can change the `rank_scoring` function.  If you do, you'll want to update or remove the corresponding test for the function in `./tests/test_app.py`.
+As an example, to change how points are awarded based on each player's weekly ranking, you can change the `rank_scoring` function.  If you do, you'll want to update or remove the corresponding test for the function in `tests/test_app.py`.
 
 ## Data
 
-The dashboard requires two input datasets: the weekly matchup schedule for the season and the weekly points for each player.  See the `points.csv` and `schedule.csv` in `./tests/data/` for examples of these in CSV form.
+The dashboard requires two input datasets: the weekly matchup schedule for the season and the weekly points for each player.  See the `points.csv` and `schedule.csv` in `tests/data/` for examples of these in CSV form.
 
 #### Schedule
 
@@ -79,7 +79,7 @@ The weekly points data should look like:
 | 3      | 96.30  | 78.08  | 87.65  | 90.56  | ...    |
 | 4      | ...    | ...    | ...    | ...    | ...    |
 
-There should be a column for `Week` and a column for each player's name.  Only the rows for weeks that have already finished should be filled in with point values for each player - leave the rest blank.  The dashboard interprets this to determine the current week.
+There should be a column for `Week` and a column for each player's name.  Only the rows for weeks that have already finished should be filled in with point values for each player - leave the rest blank.  The dashboard interprets this table to determine the current week.
 
 ## Pointing the Dashboard to Your Data
 
@@ -96,7 +96,7 @@ You can store your league's data in a Google sheet.  For both the schedule and p
 5. Click `Publish`
 6. Copy the URL for the published CSV
 
-You can then use `pd.read_csv(URL)` to read in the data.  Make sure you have the two lines under `### Google Sheets ###` in app.py uncommented (and comment out the two lines under `### Local Data ###`) and pass in your correct URLs.  You can see I specified my URLs for both pieces of data at the top of app.py.
+You can then use `pd.read_csv(URL)` to read in the data.  Make sure you have the two lines under `### Google Sheets ###` in app.py uncommented (and comment out the two lines under `### Local Data ###`) and pass in your correct URLs.  You can see I specified the URLs for both datasets at the top of app.py.
 
 #### Local to App
 
@@ -107,8 +107,8 @@ Alternatively, you can store your data locally in the project.  Put your `schedu
 You can use Heroku to deploy your app, making it available for your league to see and interact with.  There are other options for deploying your app, but I chose to use Heroku because each account gets a number of [free dyno hours](https://devcenter.heroku.com/articles/free-dyno-hours).  See Heroku's [Getting Started Guide for Python](https://devcenter.heroku.com/articles/getting-started-with-python?singlepage=true) for the steps to get setup.
 
 1. Open powershell or your terminal
-2. Use `cd` to the navigate to the `fantasy_dashboard` directory
-3. Run
+2. Use `cd` to navigate to the `fantasy_dashboard` directory
+3. Run:
    ```
    heroku login
    ```
@@ -119,12 +119,12 @@ You can use Heroku to deploy your app, making it available for your league to se
    heroku create
    ```
 
-6. Deploy your code to Heroku
+6. Deploy your code to Heroku:
    ```
    git push heroku master
    ```
    
-7. Scale your app to have 1 instance running
+7. Scale your app to have 1 instance running:
    ```
    heroku ps:scale web=1
    ```
