@@ -381,7 +381,7 @@ season = collect_season_stats(
 app.layout = html.Div(
     [
         html.Br(),
-        html.H5(WEEK_COL),
+        html.H5("Select {}".format(WEEK_COL)),
         dcc.Slider(
             id="week-slider",
             min=schedule_wide[WEEK_COL].min(),
@@ -395,8 +395,11 @@ app.layout = html.Div(
             # updatemode='drag'  - not fast enough to update as it's dragged
         ),
         html.Br(),
+        html.Br(),
         dcc.Graph(id="week-points"),
         html.Br(),
+        html.Br(),
+        html.H5("Select Stat to Visualize"),
         dcc.Dropdown(
             id="plot-selector",
             options=[{
@@ -421,16 +424,20 @@ app.layout = html.Div(
             value=POINTS_COL,
             clearable=False,
         ),
+        # html.H6(id="season-dist-title"),
         html.Br(),
+        dcc.Markdown(id="season-dist-title"),
         dcc.Graph(id="season-dist-selected"),
         html.Br(),
+        # html.H6(id="season-stats-table-title"),
+        dcc.Markdown(id="season-stats-table-title"),
         dash_table.DataTable(
             id="season-stats-table",
             columns=[{
                 "name": col,
                 "id": col
             } for col in season.columns],
-            style_table={"maxWidth": "900px"},
+            # style_table={"maxWidth": "900px"},
             style_cell={"textAlign": "center"},
             style_as_list_view=True,
             style_header={"fontWeight": "bold"},
@@ -439,8 +446,25 @@ app.layout = html.Div(
         ),
         html.Br(),
     ],
-    style={"textAlign": "center"},
+    style={"textAlign": "center", "tableAlign": "center",
+           "marginLeft": 50, "marginRight": 50},
 )
+
+
+@app.callback(
+    Output("season-stats-table-title", "children"),
+    [Input("week-slider", "value")]
+)
+def form_season_stats_table_title(week: int) -> str:
+    return """_Season Stats at End of Week {} (select week at top to change)_""".format(week)
+
+
+@app.callback(
+    Output("season-dist-title", "children"),
+    [Input("week-slider", "value")]
+)
+def form_season_stats_table_title(week: int) -> str:
+    return """_Stats at End of Week {} (select week at top to change)_""".format(week)
 
 
 @app.callback(
