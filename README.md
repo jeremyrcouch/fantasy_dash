@@ -83,7 +83,7 @@ There should be a column for `Week` and a column for each player's name.  Only t
 
 ## Pointing the Dashboard to Your Data
 
-There are several ways you can point the dashboard to your league's data.
+There are several ways you can point the dashboard to your league's data.  I prefer to use Google Sheets, for simplicity.
 
 #### Google Sheets
 
@@ -100,7 +100,7 @@ You can then use `pd.read_csv(URL)` to read in the data.  Make sure you have the
 
 #### Local to App
 
-Alternatively, you can store your data locally in the project.  Put your `schedule.csv` and `points.csv` in the `data` folder at the top level (replacing the example files in there).  Make sure you uncomment the two lines under `### Local Data ###` in app.py (and comment out the two lines under `### Google Sheets ###`).  With this setup, however, you'll have to deploy your app to Heroku each time you want to reflect updated points or schedule info on your dashboard.
+For testing locally, you can point to the data files in `tests/data/`.  Uncomment the two lines under `### Local Data ###` in app.py (and comment out the two lines under `### Google Sheets ###`).
 
 ## Deploying with Heroku
 

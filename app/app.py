@@ -320,12 +320,12 @@ app = Dash(__name__, external_stylesheets=["https://codepen.io/chriddyp/pen/bWLw
 server = app.server
 
 ### Google Sheets ###
-schedule_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(SCHEDULE_URL))
-points_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(POINTS_URL)).dropna()
+# schedule_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(SCHEDULE_URL))
+# points_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(POINTS_URL)).dropna()
 
 ### Local Data ###
-# schedule_wide = pd.read_csv('./data/schedule.csv')
-# points_wide = pd.read_csv('./data/points.csv')
+schedule_wide = pd.read_csv('./tests/data/schedule.csv')
+points_wide = pd.read_csv('./tests/data/points.csv')
 
 # TODO: validation checks
 
@@ -424,12 +424,10 @@ app.layout = html.Div(
             value=POINTS_COL,
             clearable=False,
         ),
-        # html.H6(id="season-dist-title"),
         html.Br(),
         dcc.Markdown(id="season-dist-title"),
         dcc.Graph(id="season-dist-selected"),
         html.Br(),
-        # html.H6(id="season-stats-table-title"),
         dcc.Markdown(id="season-stats-table-title"),
         dash_table.DataTable(
             id="season-stats-table",
@@ -463,7 +461,7 @@ def form_season_stats_table_title(week: int) -> str:
     Output("season-dist-title", "children"),
     [Input("week-slider", "value")]
 )
-def form_season_stats_table_title(week: int) -> str:
+def form_season_dist_title(week: int) -> str:
     return """_Stats at End of Week {} (select week at top to change)_""".format(week)
 
 
