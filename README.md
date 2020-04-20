@@ -5,6 +5,8 @@ A simple fantasy football dashboard.
 - Visualize weekly and seasonal stats
 - Share it with your league
 
+![vis](images/vis_points.png)
+
 ## Installing
 
 1. [Download Anaconda](https://www.anaconda.com/distribution/).
