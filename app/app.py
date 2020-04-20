@@ -327,7 +327,7 @@ server = app.server
 schedule_wide = pd.read_csv('./tests/data/schedule.csv')
 points_wide = pd.read_csv('./tests/data/points.csv')
 
-# TODO: validation checks
+# TODO: data validation checks
 
 PLAYERS = [col for col in schedule_wide.columns if col != WEEK_COL]
 
@@ -366,7 +366,6 @@ points["Close Match"] = (
 points["Close Loss"] = (~points.loc[:, "Won"]) & points.loc[:, "Close Match"]
 points["Close Win"] = points.loc[:, "Won"] & points.loc[:, "Close Match"]
 
-# TODO: generic stat function??
 week_med = points.groupby(WEEK_COL)[POINTS_COL].median().reset_index()
 week_med = week_med.rename(columns={POINTS_COL: "Weekly Median Points"})
 points = pd.merge(points, week_med, on=WEEK_COL, how="left")
@@ -444,8 +443,12 @@ app.layout = html.Div(
         ),
         html.Br(),
     ],
-    style={"textAlign": "center", "tableAlign": "center",
-           "marginLeft": 50, "marginRight": 50},
+    style={
+        "textAlign": "center",
+        "tableAlign": "center",
+        "marginLeft": 50,
+        "marginRight": 50
+    },
 )
 
 
@@ -454,7 +457,9 @@ app.layout = html.Div(
     [Input("week-slider", "value")]
 )
 def form_season_stats_table_title(week: int) -> str:
-    return """_Season Stats at End of Week {} (select week at top to change)_""".format(week)
+    return """_Season Stats at End of Week {} (select week at top to change)_""".format(
+        week
+    )
 
 
 @app.callback(
