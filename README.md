@@ -5,7 +5,7 @@ A simple fantasy football dashboard.
 - Visualize weekly and seasonal stats
 - Share it with your league
 
-![vis](images/vis_points.png)
+![vis](images/vis_points.PNG)
 
 ## Installing
 
