@@ -320,12 +320,12 @@ app = Dash(__name__, external_stylesheets=["https://codepen.io/chriddyp/pen/bWLw
 server = app.server
 
 ### Google Sheets ###
-# schedule_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(SCHEDULE_URL))
-# points_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(POINTS_URL)).dropna()
+schedule_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(SCHEDULE_URL))
+points_wide = pd.read_csv(GOOGLE_SHEETS_URL.format(POINTS_URL)).dropna()
 
 ### Local Data ###
-schedule_wide = pd.read_csv('./tests/data/schedule.csv')
-points_wide = pd.read_csv('./tests/data/points.csv')
+# schedule_wide = pd.read_csv('./tests/data/schedule.csv')
+# points_wide = pd.read_csv('./tests/data/points.csv')
 
 # TODO: data validation checks
 
