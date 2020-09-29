@@ -10,8 +10,8 @@ import dash_table
 from dash.dependencies import Input, Output
 
 GOOGLE_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/{}&single=true&output=csv"
-SCHEDULE_URL = "2PACX-1vS4BxaruR77zq40juWJSOIyTnXeM55dSFpUo1FKAS9MH2N5dX4B93eaTUafyiBVeg/pub?gid=1184397163"
-POINTS_URL = "2PACX-1vS4BxaruR77zq40juWJSOIyTnXeM55dSFpUo1FKAS9MH2N5dX4B93eaTUafyiBVeg/pub?gid=2069019650"
+SCHEDULE_URL = "2PACX-1vQys0oYM-7DvOA2QwVzeyjmYLX_jBv39gahspHoiWvAlqbms3U-yezehPPHFUD_kg/pub?gid=1056981259"
+POINTS_URL = "2PACX-1vQys0oYM-7DvOA2QwVzeyjmYLX_jBv39gahspHoiWvAlqbms3U-yezehPPHFUD_kg/pub?gid=131097540"
 
 WEEK_COL = "Week"
 PLAYER_COL = "Player"
