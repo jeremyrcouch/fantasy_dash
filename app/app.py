@@ -178,21 +178,24 @@ def collect_season_stats(
         season: DataFrame, season stats
     """
 
-    season = points.groupby(player_col).agg({
+    pts = points.copy()
+    pts["Close Win Agg"] = pts["Close Win"].astype(int)
+    pts["Close Loss Agg"] = pts["Close Loss"].astype(int)
+    season = pts.groupby(player_col).agg({
         points_col: "sum",
         COL_JOIN.format(points_col, against_col): "sum",
         "Won": "sum",
         COL_JOIN.format(rank_col, points_col): "sum",
         "Expected Win": "sum",
-        "Close Win": "sum",
-        "Close Loss": "sum",
+        "Close Win Agg": "sum",
+        "Close Loss Agg": "sum",
     })
     season = season.rename(
         columns={
             "Won": "Wins",
             "Expected Win": "Expected Wins",
-            "Close Win": "Close Wins",
-            "Close Loss": "Close Losses",
+            "Close Win Agg": "Close Wins",
+            "Close Loss Agg": "Close Losses",
         }
     )
     season = season.round({
@@ -203,7 +206,7 @@ def collect_season_stats(
     season["Total Points"] = (
         season.loc[:, "Wins"] + season.loc[:, COL_JOIN.format(rank_col, points_col)]
     )
-    season["Place"] = season.loc[:, "Total Points"].rank(ascending=False)
+    season["Place"] = season.loc[:, "Total Points"].rank(method="min", ascending=False)
     season = season.sort_values(by="Place", ascending=True)
 
     season_col_order = [
